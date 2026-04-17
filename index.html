@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist Fanem - Hospital Santa Lucinda</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .header-app {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; display: inline-block; font-size: 0.9em; margin-top: 10px; }
+        
+        .app-footer {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .form-container { padding: 20px; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 4px; font-size: 12px; }
+        .form-group input, .form-group select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
+
+        .section { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .section-header { background: #34495e; color: white; padding: 8px 12px; font-weight: bold; }
+
+        .checklist-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .checklist-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+
+        .actions { display: flex; gap: 10px; justify-content: center; padding: 20px; background: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-secondary { background: #95a5a6; color: white; }
+
+        .document-preview { display: none; background: #555; padding: 20px 0; }
+        .document-preview.active { display: block; }
+        
+        .report-page {
+            width: 21cm;
+            height: 29.7cm;
+            margin: 0 auto 15px auto;
+            padding: 0.8cm 1.5cm;
+            background: white;
+            position: relative;
+            color: #000;
+            page-break-after: always;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .document-logo { position: absolute; top: 0.8cm; left: 1.5cm; width: 140px; }
+        .document-logo img { width: 100%; height: auto; }
+
+        .doc-header { margin-bottom: 5px; padding-left: 155px; min-height: 110px; }
+        .doc-header h3 { font-size: 11pt; border: 1.5px solid #000; padding: 5px; margin-bottom: 8px; text-align: center; text-transform: uppercase; }
+        
+        .doc-info-line { font-size: 9.5pt; margin-bottom: 4px; display: flex; justify-content: flex-start; gap: 15px; }
+        .doc-info-line.split { justify-content: space-between; }
+
+        .section-title { font-weight: bold; font-size: 9.5pt; background: #f0f0f0; border: 1px solid #000; padding: 4px 8px; margin-top: 5px; }
+
+        .checklist-doc-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        .checklist-doc-table td { border: 1px solid #000; padding: 3px 6px; line-height: 1.1; }
+        
+        .obs-container { margin-top: 8px; font-size: 9.5pt; }
+        .obs-box { border: 1px solid #000; min-height: 45px; padding: 6px; margin-top: 4px; }
+
+        .footer-table { width: 100%; border-collapse: collapse; margin-top: auto; font-size: 8pt; }
+        .footer-table td { border: 1px solid #000; padding: 4px; text-align: center; }
+        
+        .last-line-original { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 7.2pt; 
+            border: 1px solid #000; 
+            border-top: none; 
+            padding: 3px 10px;
+        }
+
+        .file-path-line {
+            font-size: 5.5pt;
+            color: #333;
+            margin-top: 2px;
+            text-align: left;
+        }
+
+        .signature-area { margin-top: 20px; margin-bottom: 10px; text-align: center; font-size: 9.5pt; }
+
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background: white; padding: 0; }
+            .container > *:not(.document-preview) { display: none !important; }
+            .app-footer { display: none !important; }
+            .document-preview { display: block !important; background: white; padding: 0; }
+            .report-page { 
+                margin: 0; 
+                border: none; 
+                width: 210mm; 
+                height: 297mm; 
+                box-shadow: none !important;
+                page-break-after: always; 
+            }
+            .actions { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-app" id="mainHeader">
+        <h1>&#127973; Hospital Santa Lucinda</h1>
+        <p>Manuten&ccedil;&atilde;o Preventiva - CL-011</p>
+        <div class="badge" id="reportCountBadge">&#128221; Relat&oacute;rios na fila: 0</div>
+    </div>
+
+    <div class="form-container" id="formContainer">
+        <div class="info-grid">
+            <div class="form-group"><label>Patrim&ocirc;nio:</label><select id="patrimonio"><option value="">Selecione</option></select></div>
+            <div class="form-group"><label>N&ordm; S&eacute;rie M&oacute;dulo:</label><select id="moduloSerie">
+                <option value="">Selecione</option>
+                <option value="CN00345">CN00345</option>
+                <option value="CA03192">CA03192</option>
+                <option value="CA03720">CA03720</option>
+                <option value="CA03191">CA03191</option>
+                <option value="Sem M&oacute;dulo">Sem M&oacute;dulo</option>
+                <option value="Sem N&uacute;mero de S&eacute;rie">Sem N&uacute;mero de S&eacute;rie</option>
+            </select></div>
+            <div class="form-group"><label>N&ordm; de S&eacute;rie Equip.:</label><input type="text" id="serie" readonly></div>
+            <div class="form-group"><label>TAG:</label><input type="text" id="tag" readonly></div>
+            <div class="form-group"><label>Modelo:</label><input type="text" id="modelo" readonly></div>
+            <div class="form-group"><label>Setor:</label><select id="setor">
+                <option value="">Selecione</option>
+                <option value="UTI NEO">UTI NEO</option>
+                <option value="PEDIATRIA">PEDIATRIA</option>
+                <option value="C.C.2&deg;andar">C.C.2&deg;andar</option>
+                <option value="C.P.N">C.P.N</option>
+            </select></div>
+            <div class="form-group"><label>T&eacute;cnico:</label><select id="tecnico">
+                <option value="">Selecione</option>
+                <option value="Fabiano de Paula">Fabiano de Paula</option>
+                <option value="Franciele dos Santos">Franciele dos Santos</option>
+                <option value="Jaderson Roberto">Jaderson Roberto</option>
+                <option value="Robson Jacob">Robson Jacob</option>
+            </select></div>
+        </div>
+
+        <div id="sectionsContainer"></div>
+
+        <div class="form-group" style="margin-top:10px">
+            <label>Observa&ccedil;&otilde;es Adicionais:</label>
+            <textarea id="observacoes" style="width:100%; min-height:60px; padding:10px; border-radius:5px; border:1px solid #ccc;"></textarea>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="addCurrentReport()">&#10133; Adicionar e Limpar</button>
+            <button class="btn btn-warning" onclick="generateAllReports()">&#128196; Gerar Documentos</button>
+            <button class="btn btn-secondary" onclick="location.reload()">&#128260; Resetar</button>
+        </div>
+    </div>
+
+    <div class="document-preview" id="documentPreview">
+        <div class="document-content" id="documentContent"></div>
+        <div class="actions">
+            <button class="btn btn-primary" onclick="window.print()">&#128424; Imprimir / Salvar PDF</button>
+            <button class="btn btn-secondary" onclick="backToForm()">&#9998; Voltar ao Editor</button>
+        </div>
+    </div>
+</div>
+
+<div class="app-footer">
+    &lt;&gt; Desenvolvido por Jaderson Roberto
+</div>
+
+<script>
+    const PATRIMONIO_DADOS = {
+        "057748": {"serie": "CN344", "tag": "UTIN0046", "modelo": "1186"},
+        "057595": {"serie": "CC4023", "tag": "UTIN0006", "modelo": "C186"},
+        "057621": {"serie": "CC4024", "tag": "UTIN0036", "modelo": "C186"},
+        "057609": {"serie": "CC4025", "tag": "UTIN0013", "modelo": "C186"},
+        "049007": {"serie": "CC4744", "tag": "UTIN0045", "modelo": "C186"},
+        "057610": {"serie": "CI980", "tag": "UTIN0048", "modelo": "2186"},
+        "049001": {"serie": "CI981", "tag": "UTIN0047", "modelo": "2186"},
+        "057747": {"serie": "CN00345", "tag": "UTIN0051", "modelo": "1186"},
+        "086701": {"serie": "CO0479", "tag": "SEM TAG", "modelo": "2286"},
+        "086702": {"serie": "CO0477", "tag": "SEM TAG", "modelo": "2286"},
+        "071814": {"serie": "CF4930", "tag": "OBST0013", "modelo": "IT 158S"},
+        "056023": {"serie": "CF1792", "tag": "CC3A0075", "modelo": "IT 158S"}
+    };
+
+    const sections = {
+        qualitativos: {
+            title: "1. Testes Qualitativos",
+            items: ["Checagem do Chassis","Fus&iacute;veis/Porta Fus&iacute;veis","Chaves/Bot&otilde;es/Controles","Led&acute;s/Display&acute;s","Acess&oacute;rios","Reservat&oacute;rio de &Aacute;gua","Manga &Iacute;ris","Abafadores","Portinhola/Guarni&ccedil;&atilde;o da Portinhola","Bandeja/Colch&atilde;o","C&uacute;pula/Parede Dupla/Borracha de Veda&ccedil;&atilde;o da C&uacute;pula","Conserva&ccedil;&atilde;o da Resist&ecirc;ncia","Sensor de Aquecimento Ar","Sensor de Falta de Circula&ccedil;&atilde;o de Ar","Motor/Ventoinha","Movimenta&ccedil;&atilde;o dos Rod&iacute;zios","Conserva&ccedil;&atilde;o da Balan&ccedil;a"]
+        },
+        quantitativos: {
+            title: "2. Testes Quantitativos",
+            items: ["Temperatura 35&ordm;C - PELE","Temperatura 35&ordm;C - AR","Controle de Umidade","Funcionamento da Balan&ccedil;a","Alarmes"]
+        },
+        limpeza: {
+            title: "3. Limpeza",
+            items: ["Limpeza Interna","Limpeza Externa"]
+        }
+    };
+
+    let reportsList = [];
+
+    function init() {
+        const select = document.getElementById('patrimonio');
+        Object.keys(PATRIMONIO_DADOS).sort().forEach(pat => {
+            let opt = document.createElement('option');
+            opt.value = pat; opt.textContent = pat; select.appendChild(opt);
+        });
+        select.onchange = function() {
+            const d = PATRIMONIO_DADOS[this.value] || {serie:'', tag:'', modelo:''};
+            document.getElementById('serie').value = d.serie;
+            document.getElementById('tag').value = d.tag;
+            document.getElementById('modelo').value = d.modelo;
+        };
+
+        const container = document.getElementById('sectionsContainer');
+        for(let key in sections) {
+            let html = `<div class="section"><div class="section-header">${sections[key].title}</div><table class="checklist-table">`;
+            sections[key].items.forEach(item => {
+                const id = item.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                html += `<tr><td>${item}</td><td style="width:160px; text-align:right">
+                    <label><input type="radio" name="${id}" value="OK" checked> OK</label> 
+                    <label><input type="radio" name="${id}" value="NOK"> NO</label> 
+                    <label><input type="radio" name="${id}" value="NA"> NA</label>
+                </td></tr>`;
+            });
+            container.innerHTML += html + `</table></div>`;
+        }
+    }
+
+    function addCurrentReport() {
+        if(!document.getElementById('patrimonio').value) return alert('Selecione o patrim&ocirc;nio');
+        const checklist = {};
+        for(let key in sections) {
+            sections[key].items.forEach(item => {
+                const id = item.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                checklist[item] = document.querySelector(`input[name="${id}"]:checked`).value;
+            });
+        }
+        reportsList.push({
+            patrimonio: document.getElementById('patrimonio').value,
+            modulo: document.getElementById('moduloSerie').value,
+            serie: document.getElementById('serie').value,
+            tag: document.getElementById('tag').value,
+            modelo: document.getElementById('modelo').value,
+            setor: document.getElementById('setor').value,
+            tecnico: document.getElementById('tecnico').value,
+            obs: document.getElementById('observacoes').value,
+            data: new Date().toLocaleDateString('pt-BR'),
+            checklist: checklist
+        });
+        document.getElementById('reportCountBadge').innerHTML = `&#128221; Relat&oacute;rios na fila: ${reportsList.length}`;
+        clearForm();
+    }
+
+    function clearForm() {
+        document.getElementById('patrimonio').value = "";
+        document.getElementById('moduloSerie').value = "";
+        document.getElementById('serie').value = "";
+        document.getElementById('tag').value = "";
+        document.getElementById('modelo').value = "";
+        document.getElementById('setor').value = "";
+        document.getElementById('tecnico').value = "";
+        document.getElementById('observacoes').value = "";
+        document.querySelectorAll('input[type="radio"][value="OK"]').forEach(radio => radio.checked = true);
+    }
+
+    function generateAllReports() {
+        if(reportsList.length === 0) return alert('Nenhum relat&oacute;rio na fila.');
+        let html = '';
+        reportsList.forEach(report => {
+            html += `<div class="report-page">
+                <div class="document-logo"><img src="logo.png"></div>
+                <div class="doc-header">
+                    <h3>Check List - Manuten&ccedil;&atilde;o Preventiva de Incubadora</h3>
+                    <div class="doc-info-line split"><span><strong>Marca:</strong> FANEM</span> <span><strong>Data:</strong> ${report.data}</span></div>
+                    <div class="doc-info-line split"><span><strong>Patrim&ocirc;nio:</strong> ${report.patrimonio}</span> <span><strong>N&ordm; S&eacute;rie:</strong> ${report.serie}</span></div>
+                    <div class="doc-info-line split"><span><strong>TAG:</strong> ${report.tag}</span> <span><strong>Modelo:</strong> ${report.modelo}</span></div>
+                    <div class="doc-info-line"><strong>T&eacute;cnico:</strong> ${report.tecnico}</div>
+                    <div class="doc-info-line"><span><strong>S&eacute;rie M&oacute;dulo:</strong> ${report.modulo}</span> <span style="margin-left:auto"><strong>Setor:</strong> ${report.setor}</span></div>
+                </div>`;
+
+            for(let key in sections) {
+                html += `<div class="section-title">${sections[key].title}</div><table class="checklist-doc-table">`;
+                sections[key].items.forEach(item => {
+                    const res = report.checklist[item];
+                    html += `<tr><td style="width:64%">${item}</td>
+                        <td style="text-align:center; width:12%">${res==='OK'?'( X ) OK':'(   ) OK'}</td>
+                        <td style="text-align:center; width:12%">${res==='NOK'?'( X ) NO':'(   ) NO'}</td>
+                        <td style="text-align:center; width:12%">${res==='NA'?'( X ) NA':'(   ) NA'}</td></tr>`;
+                });
+                html += `</table>`;
+            }
+
+            html += `<div class="obs-container"><strong>Observa&ccedil;&otilde;es:</strong><div class="obs-box">${report.obs || ''}</div></div>
+                <div style="font-size:10pt; margin-top:8px"><strong>Necessita Manuten&ccedil;&atilde;o Corretiva:</strong> (  ) Sim &nbsp; ( X ) N&atilde;o</div>
+                <div class="signature-area">________________________________________________<br><strong>ASSINATURA T&Eacute;CNICO EXECUTANTE</strong></div>
+                <table class="footer-table">
+                    <tr><td><strong>EMISS&Atilde;O:</strong> ${report.data}</td><td><strong>C&Oacute;DIGO:</strong> CL-011</td><td><strong>REVIS&Atilde;O:</strong> 00</td><td><strong>FOLHA:</strong> 01 / 01</td></tr>
+                </table>
+                <div class="last-line-original">
+                    <span>Funda&ccedil;&atilde;o S&atilde;o Paulo - Hospital Santa Lucinda</span>
+                    <span>Procedimento: PENCL 011 rev 01 Manuten&ccedil;&atilde;o Preventiva</span>
+                </div>
+                <div class="file-path-line">C:\\Users\\rjacob\\Documents\\EngClinica\\Qualidade\\Rotinas\\MRP Eng&ordm; Cl&iacute;nica\\Impressos\\Check Lists\\check list 011 rev 00 INCUBADORA NEONATAL FANEM.doc</div>
+            </div>`;
+        });
+        document.getElementById('documentContent').innerHTML = html;
+        document.getElementById('formContainer').style.display = 'none';
+        document.getElementById('mainHeader').style.display = 'none';
+        document.querySelector('.app-footer').style.display = 'none';
+        document.getElementById('documentPreview').classList.add('active');
+    }
+
+    function backToForm() {
+        document.getElementById('formContainer').style.display = 'block';
+        document.getElementById('mainHeader').style.display = 'block';
+        document.querySelector('.app-footer').style.display = 'block';
+        document.getElementById('documentPreview').classList.remove('active');
+    }
+
+    init();
+</script>
+</body>
+</html>
