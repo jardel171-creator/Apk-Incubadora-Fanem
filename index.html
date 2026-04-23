@@ -263,8 +263,8 @@
                 const id = item.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
                 html += `<tr><td>${item}</td><td style="width:160px; text-align:right">
                     <label><input type="radio" name="${id}" value="OK" checked> OK</label> 
-                    <label><input type="radio" name="${id}" value="NOK"> NO</label> 
-                    <label><input type="radio" name="${id}" value="NA"> NA</label>
+                    <label><input type="radio" name="${id}" value="NOK"> NOK</label> 
+                    <label><input type="radio" name="${id}" value="NA"> N/A</label>
                 </td></tr>`;
             });
             container.innerHTML += html + `</table></div>`;
