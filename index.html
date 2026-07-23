@@ -58,6 +58,7 @@
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-weight: 600; margin-bottom: 4px; font-size: 12px; }
         .form-group input, .form-group select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
+        .form-group input[readonly] { background: #e9ecef; cursor: not-allowed; }
 
         .section { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
         .section-header { background: #34495e; color: white; padding: 8px 12px; font-weight: bold; }
@@ -155,16 +156,19 @@
     <div class="form-container" id="formContainer">
         <div class="info-grid">
             <div class="form-group"><label>Patrim&ocirc;nio:</label><select id="patrimonio"><option value="">Selecione</option></select></div>
-            <div class="form-group"><label>N&ordm; S&eacute;rie M&oacute;dulo:</label><select id="moduloSerie">
-                <option value="">Selecione</option>
-                <option value="CN00345">CN00345</option>
-                <option value="CN00344">CN00344</option>
-                <option value="CA03192">CA03192</option>
-                <option value="CA03720">CA03720</option>
-                <option value="CA03191">CA03191</option>
-                <option value="Sem M&oacute;dulo">Sem M&oacute;dulo</option>
-                <option value="Sem N&uacute;mero de S&eacute;rie">Sem N&uacute;mero de S&eacute;rie</option>
-            </select></div>
+            <div class="form-group"><label>N&ordm; S&eacute;rie M&oacute;dulo:</label>
+                <select id="moduloSerie">
+                    <option value="">Selecione</option>
+                    <option value="CN0345">CN0345</option>
+                    <option value="CN0344">CN0344</option>
+                    <option value="CA3192">CA3192</option>
+                    <option value="CA3720">CA3720</option>
+                    <option value="CA3191">CA3191</option>
+                    <option value="Sem M&oacute;dulo">Sem M&oacute;dulo</option>
+                    <option value="Sem N&uacute;mero de S&eacute;rie">Sem N&uacute;mero de S&eacute;rie</option>
+                </select>
+                <input type="text" id="moduloSerieInput" placeholder="Digite o nº de série do módulo" style="display:none; width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:4px;">
+            </div>
             <div class="form-group"><label>N&ordm; de S&eacute;rie Equip.:</label><input type="text" id="serie" readonly></div>
             <div class="form-group"><label>TAG:</label><input type="text" id="tag" readonly></div>
             <div class="form-group"><label>Modelo:</label><input type="text" id="modelo" readonly></div>
@@ -174,6 +178,7 @@
                 <option value="PEDIATRIA">PEDIATRIA</option>
                 <option value="C.C.2&deg;andar">C.C.2&deg;andar</option>
                 <option value="C.P.N">C.P.N</option>
+                <option value="Em Manutenção">Em Manutenção</option>
             </select></div>
             <div class="form-group"><label>T&eacute;cnico:</label><select id="tecnico">
                 <option value="">Selecione</option>
@@ -213,6 +218,7 @@
 
 <script>
     const PATRIMONIO_DADOS = {
+        "LOCADO": {"serie": "","tag": "LOCADO","modelo": ""},
         "057748": {"serie": "CN344", "tag": "UTIN0046", "modelo": "1186"},
         "057595": {"serie": "CC4023", "tag": "UTIN0006", "modelo": "C186"},
         "057621": {"serie": "CC4024", "tag": "UTIN0036", "modelo": "C186"},
@@ -251,10 +257,33 @@
             opt.value = pat; opt.textContent = pat; select.appendChild(opt);
         });
         select.onchange = function() {
-            const d = PATRIMONIO_DADOS[this.value] || {serie:'', tag:'', modelo:''};
-            document.getElementById('serie').value = d.serie;
-            document.getElementById('tag').value = d.tag;
-            document.getElementById('modelo').value = d.modelo;
+            const val = this.value;
+            const moduloSelect = document.getElementById('moduloSerie');
+            const moduloInput = document.getElementById('moduloSerieInput');
+            const serieInput = document.getElementById('serie');
+            const modeloInput = document.getElementById('modelo');
+
+            if (val === 'LOCADO') {
+                // Modo locado: esconde select, mostra input, libera série e modelo
+                moduloSelect.style.display = 'none';
+                moduloInput.style.display = 'block';
+                moduloInput.value = '';
+                serieInput.readOnly = false;
+                serieInput.value = '';
+                modeloInput.readOnly = false;
+                modeloInput.value = '';
+                document.getElementById('tag').value = '';
+            } else {
+                // Modo normal
+                moduloSelect.style.display = 'block';
+                moduloInput.style.display = 'none';
+                const d = PATRIMONIO_DADOS[val] || {serie:'', tag:'', modelo:''};
+                document.getElementById('serie').value = d.serie;
+                document.getElementById('tag').value = d.tag;
+                documento.getElementById('modelo').value = d.modelo;
+                serieInput.readOnly = true;
+                modeloInput.readOnly = true;
+            }
         };
 
         const container = document.getElementById('sectionsContainer');
@@ -272,6 +301,21 @@
         }
     }
 
+    function resetLocadoState() {
+        // Restaura o estado visual para o modo padrão (não locado)
+        const select = document.getElementById('patrimonio');
+        if (select.value === 'LOCADO') {
+            select.value = '';
+        }
+        document.getElementById('moduloSerie').style.display = 'block';
+        document.getElementById('moduloSerieInput').style.display = 'none';
+        document.getElementById('serie').readOnly = true;
+        document.getElementById('serie').value = '';
+        document.getElementById('modelo').readOnly = true;
+        document.getElementById('modelo').value = '';
+        document.getElementById('tag').value = '';
+    }
+
     function addCurrentReport() {
         if(!document.getElementById('patrimonio').value) return alert('Selecione o patrim&ocirc;nio');
         const checklist = {};
@@ -281,9 +325,17 @@
                 checklist[item] = document.querySelector(`input[name="${id}"]:checked`).value;
             });
         }
+
+        let moduloVal = '';
+        if (document.getElementById('patrimonio').value === 'LOCADO') {
+            moduloVal = document.getElementById('moduloSerieInput').value;
+        } else {
+            moduloVal = document.getElementById('moduloSerie').value;
+        }
+
         reportsList.push({
             patrimonio: document.getElementById('patrimonio').value,
-            modulo: document.getElementById('moduloSerie').value,
+            modulo: moduloVal,
             serie: document.getElementById('serie').value,
             tag: document.getElementById('tag').value,
             modelo: document.getElementById('modelo').value,
@@ -300,6 +352,7 @@
     function clearForm() {
         document.getElementById('patrimonio').value = "";
         document.getElementById('moduloSerie').value = "";
+        document.getElementById('moduloSerieInput').value = "";
         document.getElementById('serie').value = "";
         document.getElementById('tag').value = "";
         document.getElementById('modelo').value = "";
@@ -307,6 +360,7 @@
         document.getElementById('tecnico').value = "";
         document.getElementById('observacoes').value = "";
         document.querySelectorAll('input[type="radio"][value="OK"]').forEach(radio => radio.checked = true);
+        resetLocadoState(); // Restaura visual
     }
 
     function generateAllReports() {
