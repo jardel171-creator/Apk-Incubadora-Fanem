@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -280,7 +280,8 @@
                 const d = PATRIMONIO_DADOS[val] || {serie:'', tag:'', modelo:''};
                 document.getElementById('serie').value = d.serie;
                 document.getElementById('tag').value = d.tag;
-                documento.getElementById('modelo').value = d.modelo;
+                // CORREÇÃO: era "documento.getElementById", agora está correto
+                document.getElementById('modelo').value = d.modelo;
                 serieInput.readOnly = true;
                 modeloInput.readOnly = true;
             }
@@ -420,4 +421,4 @@
     init();
 </script>
 </body>
-</html>
+</html> 
